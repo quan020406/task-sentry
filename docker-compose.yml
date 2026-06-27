@@ -1,0 +1,71 @@
+# 《先别开工》Docker Compose 编排
+# 一键启动前后端服务
+#
+# 使用：
+#   1. 复制 .env.docker.example 为 .env.docker 并修改配置
+#   2. docker compose --env-file .env.docker up -d
+#   3. 访问 http://localhost
+
+services:
+  # ===== 后端服务 =====
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: xbgk-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - GUEST_JWT_EXPIRES_IN=${GUEST_JWT_EXPIRES_IN:-1d}
+      - GUEST_DAILY_LIMIT=${GUEST_DAILY_LIMIT:-3}
+      - DB_PATH=/app/data/app.db
+      - CLIENT_ORIGIN=${CLIENT_ORIGIN:-http://localhost}
+      - AI_PROVIDER=${AI_PROVIDER:-mock}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - AI_BASE_URL=${AI_BASE_URL:-}
+      - AI_MODEL=${AI_MODEL:-}
+      - AI_TEMPERATURE=${AI_TEMPERATURE:-0.7}
+      - AI_MAX_TOKENS=${AI_MAX_TOKENS:-2000}
+      - AI_DAILY_TOKEN_LIMIT=${AI_DAILY_TOKEN_LIMIT:-0}
+    volumes:
+      # SQLite 数据库持久化
+      - ./data:/app/data
+    # 默认不对外暴露端口，通过 frontend 的 nginx 反代访问
+    # 如需直接调试后端，取消注释下行
+    # ports:
+    #   - "3000:3000"
+    networks:
+      - xbgk-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ===== 前端服务（Nginx）=====
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: xbgk-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+    networks:
+      - xbgk-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  xbgk-net:
+    driver: bridge

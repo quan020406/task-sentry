@@ -1,0 +1,26 @@
+/**
+ * 全局样式入口
+ * 新野兽派设计系统
+ *
+ * 引入顺序：变量 → 重置 → 工具类
+ *
+ * S13 性能优化：Google Fonts 字体改由 index.html 通过 preconnect + <link rel="stylesheet"> 加载，
+ * 避免 CSS @import 阻塞渲染。
+ */
+
+/* 设计 Token */
+@import './variables.css';
+
+/* 样式重置 */
+@import './reset.css';
+
+/* 工具类 */
+@import './utilities.css';
+
+/* 全局过渡（仅用于交互反馈，非柔和过渡色） */
+button,
+a,
+input,
+textarea {
+  transition: all var(--transition-fast);
+}

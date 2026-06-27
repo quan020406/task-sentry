@@ -1,0 +1,54 @@
+# ===== 敏感配置（禁止提交）=====
+.env
+.env.local
+.env.*.local
+.env.docker
+.env.docker.example
+
+# ===== 项目内部文档与规范（不上传）=====
+AGENTS.md
+DOCUMENT_CATEGORIZATION_RULES.md
+UI设计规则文档_新野兽派.md
+先别开工.md
+先别开工.docx
+docs/
+uI定调/
+UI定调/
+index.html
+
+# ===== Docker 数据卷 =====
+data/
+backend/data/
+
+# ===== 构建产物 =====
+backend/dist/
+frontend/dist/
+
+# ===== 依赖 =====
+node_modules/
+**/node_modules/
+
+# ===== 日志 =====
+*.log
+npm-debug.log*
+
+# ===== 编辑器与系统文件 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ===== Docker（保留 docker-compose.yml，忽略临时）=====
+.docker/
+
+# ===== TypeScript 构建信息 =====
+*.tsbuildinfo
+
+# ===== node-gyp 缓存 =====
+.node-gyp-cache/
+**/.node-gyp-cache/
+
+# ===== 临时部署目录 =====
+deploy/

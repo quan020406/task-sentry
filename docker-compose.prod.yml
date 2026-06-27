@@ -1,0 +1,38 @@
+# 《先别开工》Docker Compose 生产环境覆盖配置
+# 用法：docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# 生产环境特性：
+# - 资源限制
+# - 日志限制
+# - 后端不暴露端口（仅内部通信）
+
+services:
+  backend:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # 生产环境强制不暴露后端端口
+    ports: !reset []
+
+  frontend:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          memory: 32M
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"

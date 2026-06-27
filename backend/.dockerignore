@@ -1,0 +1,38 @@
+# 依赖（容器内重新安装）
+node_modules/
+
+# 构建产物（容器内重新编译）
+dist/
+
+# 环境变量（禁止打包进镜像）
+.env
+.env.local
+.env.*.local
+
+# 版本控制
+.git/
+.gitignore
+
+# 编辑器与系统文件
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+npm-debug.log*
+
+# 数据库文件（数据通过卷挂载持久化，禁止打包进镜像）
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# TypeScript 增量构建缓存
+*.tsbuildinfo
+
+# node-gyp 缓存
+.node-gyp-cache/

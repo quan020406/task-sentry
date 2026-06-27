@@ -1,0 +1,146 @@
+/**
+ * 新野兽派设计系统 - 设计 Token
+ * Neo-Brutalist Design Tokens
+ *
+ * 严格遵循 3 色原则：深黑 / 金黄 / 米白
+ * 所有元素直角，仅使用硬阴影
+ */
+
+:root {
+  /* ===== 颜色 - 主色板 ===== */
+  --color-black: #1A1A1A;        /* 深黑：主文字、边框、深色背景 */
+  --color-gold: #FFD700;         /* 金黄：强调色、Hover、活动态 */
+  --color-gold-dark: #B8860B;    /* 暗金：次要强调、Hover 数字色 */
+  --color-cream: #F5F5F0;        /* 米白：页面背景色 */
+  --color-white: #FFFFFF;        /* 纯白：卡片背景 */
+  --color-cream-light: #FAFAF5;  /* 浅米：交替行背景 */
+
+  /* ===== 颜色 - 中性灰阶 ===== */
+  --color-gray-1: #888888;       /* 次要说明文字 */
+  --color-gray-2: #666666;       /* 正文辅助文字、元数据 */
+  --color-gray-3: #444444;       /* 正文主要文字 */
+  --color-gray-4: #DDDDDD;       /* 大号序号数字（浅色） */
+  --color-gray-5: #333333;       /* 进度条背景 */
+
+  /* ===== 颜色 - 风险色（仅用于风险标签） ===== */
+  --color-risk-high: #EF4444;    /* 高风险：红 */
+  --color-risk-mid: #F59E0B;     /* 中风险：黄 */
+  --color-risk-low: #10B981;     /* 低风险：绿 */
+
+  /* ===== 字体族 ===== */
+  --font-title: 'Archivo Black', sans-serif;         /* 主标题、大号数字、品牌标识 */
+  --font-mono: 'JetBrains Mono', monospace;          /* 标签、元数据、导航、代码风格 */
+  --font-body: 'Work Sans', sans-serif;              /* 正文、卡片标题、描述 */
+  --font-italic: Georgia, serif;                     /* 斜体强调、副标题装饰 */
+
+  /* ===== 字号 ===== */
+  --fs-h1: 96px;        /* 页面核心大标题 */
+  --fs-h2: 32px;        /* 区块标题 */
+  --fs-h3: 14px;        /* 卡片标题 */
+  --fs-body: 14px;      /* 正文 */
+  --fs-caption: 12px;   /* 辅助说明 */
+  --fs-label: 11px;     /* 标签（全大写） */
+  --fs-label-sm: 9px;   /* 小标签 */
+  --fs-num-xl: 96px;    /* 大号数字（分数） */
+  --fs-num-md: 28px;    /* 中号数字（小卡片） */
+  --fs-num-lg: 42px;    /* 序号数字 */
+
+  /* ===== 行高 ===== */
+  --lh-tight: 0.85;     /* 标题紧凑 */
+  --lh-normal: 1.0;     /* 节标题 */
+  --lh-card: 1.4;       /* 卡片标题 */
+  --lh-body: 1.9;       /* 正文宽松 */
+  --lh-caption: 1.7;    /* 说明文字 */
+
+  /* ===== 字重 ===== */
+  --fw-black: 900;      /* Black - 标题 */
+  --fw-bold: 700;       /* Bold - 强调、标签 */
+  --fw-regular: 400;    /* Regular - 正文 */
+
+  /* ===== 字间距 ===== */
+  --ls-title: -3px;     /* H1 主标题 */
+  --ls-h2: -0.5px;      /* H2 节标题 */
+  --ls-label: 1px;      /* 标签 */
+  --ls-label-lg: 2.5px; /* 大标签（分数卡） */
+  --ls-footer: 1.5px;   /* 页脚 */
+
+  /* ===== 间距（8px 基准） ===== */
+  --space-xs: 8px;      /* 小间距、图标间距 */
+  --space-sm: 12px;     /* 卡片内边距 */
+  --space-md: 16px;     /* 元素间距 */
+  --space-lg: 24px;     /* 区块内边距 */
+  --space-xl: 32px;     /* 区块间距 */
+  --space-2xl: 40px;    /* 大区块间距、容器水平内边距 */
+  --space-3xl: 48px;    /* 页面级间距 */
+  --space-4xl: 56px;    /* 超大间距、顶部内边距 */
+  --space-5xl: 72px;    /* 底部内边距 */
+
+  /* ===== 边框 ===== */
+  --border-width-thin: 2px;     /* 卡片级细分隔 */
+  --border-width-thick: 3px;    /* 区块级粗分隔 */
+  --border-width-heavy: 4px;    /* 超粗分隔 */
+  --border-color: var(--color-black);
+  --border-solid: solid;
+
+  /* ===== 硬阴影（无模糊） ===== */
+  --shadow-sm: 2px 2px 0 var(--color-black);     /* 小偏移 */
+  --shadow-md: 4px 4px 0 var(--color-black);     /* 中偏移 */
+  --shadow-lg: 6px 6px 0 var(--color-black);     /* 大偏移 */
+  --shadow-xl: 8px 8px 0 var(--color-black);     /* 超大偏移 */
+  --shadow-gold: 4px 4px 0 var(--color-gold);    /* 金色硬阴影 */
+
+  /* ===== 过渡 ===== */
+  --transition-fast: 0.15s linear;
+  --transition-normal: 0.2s linear;
+
+  /* ===== 容器 ===== */
+  --container-max: 1200px;
+  --container-px: 40px;
+
+  /* ===== z-index 层级 ===== */
+  --z-toast: 9999;
+  --z-modal: 1000;
+  --z-dropdown: 100;
+  --z-sticky: 50;
+
+  /* ===== 响应式断点（S12）=====
+   * 桌面端：≥ 1200px（设计基准）
+   * 平板端：768px ~ 1199px
+   * 移动端：< 768px
+   * media query 使用 max-width: 1199px / 767px
+   */
+  --bp-desktop: 1200px;
+  --bp-tablet: 1199px;   /* 平板上限（含） */
+  --bp-mobile: 767px;    /* 移动上限（含） */
+
+  /* ===== 布局尺寸变量 ===== */
+  /* Header 固定高度 64px；Footer 高度由内容决定，提供基准值用于 calc 兜底 */
+  --header-height: 64px;
+
+  /* ===== 触摸友好 ===== */
+  --touch-target: 44px;  /* 可点击元素最小高度（移动端） */
+}
+
+/* ===== 响应式缩放（S12）=====
+ * 桌面优先：基准值定义于 :root，平板/移动按断点覆盖
+ * 仅覆盖需要缩放的 token，保持 8px 基准比例
+ */
+@media (max-width: 1199px) {
+  :root {
+    --container-px: 32px;   /* 平板容器边距收窄 */
+    --space-3xl: 40px;
+    --space-4xl: 48px;
+    --space-5xl: 56px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --container-px: 20px;   /* 移动容器边距进一步收窄 */
+    --space-xl: 24px;
+    --space-2xl: 32px;
+    --space-3xl: 32px;
+    --space-4xl: 40px;
+    --space-5xl: 48px;
+  }
+}

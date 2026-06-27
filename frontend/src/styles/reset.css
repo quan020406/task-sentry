@@ -1,0 +1,109 @@
+/**
+ * 样式重置
+ * 基于现代 CSS Reset，结合新野兽派风格调整
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-black);
+  background-color: var(--color-cream);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* 移除列表默认样式 */
+ul,
+ol {
+  list-style: none;
+}
+
+/* 链接基础样式 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 图片/媒体元素 */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 输入元素继承字体 */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* 按钮 reset */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* 标题默认字体 */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: var(--fw-black);
+  line-height: var(--lh-normal);
+}
+
+/* 段落默认 */
+p {
+  line-height: var(--lh-body);
+}
+
+/* 表格 */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* 滚动条样式（新野兽派） */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
+  border-left: 2px solid var(--color-black);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-black);
+  border: 2px solid var(--color-cream);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-dark);
+}
+
+/* 选中文字样式 */
+::selection {
+  background: var(--color-gold);
+  color: var(--color-black);
+}

@@ -1,0 +1,208 @@
+/**
+ * 工具类
+ * 新野兽派风格常用样式工具
+ */
+
+/* ===== Flex 布局 ===== */
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1 1 0%; }
+.flex-none { flex: none; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.items-stretch { align-items: stretch; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+
+/* ===== Grid 布局 ===== */
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+/* ===== 间距工具 ===== */
+/* margin */
+.m-0 { margin: 0; }
+.m-xs { margin: var(--space-xs); }
+.m-sm { margin: var(--space-sm); }
+.m-md { margin: var(--space-md); }
+.m-lg { margin: var(--space-lg); }
+.m-xl { margin: var(--space-xl); }
+.mt-0 { margin-top: 0; }
+.mt-xs { margin-top: var(--space-xs); }
+.mt-sm { margin-top: var(--space-sm); }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+.mt-xl { margin-top: var(--space-xl); }
+.mt-2xl { margin-top: var(--space-2xl); }
+.mb-0 { margin-bottom: 0; }
+.mb-xs { margin-bottom: var(--space-xs); }
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+.mb-xl { margin-bottom: var(--space-xl); }
+.mb-2xl { margin-bottom: var(--space-2xl); }
+
+/* padding */
+.p-0 { padding: 0; }
+.p-xs { padding: var(--space-xs); }
+.p-sm { padding: var(--space-sm); }
+.p-md { padding: var(--space-md); }
+.p-lg { padding: var(--space-lg); }
+.p-xl { padding: var(--space-xl); }
+.px-xs { padding-left: var(--space-xs); padding-right: var(--space-xs); }
+.px-sm { padding-left: var(--space-sm); padding-right: var(--space-sm); }
+.px-md { padding-left: var(--space-md); padding-right: var(--space-md); }
+.px-lg { padding-left: var(--space-lg); padding-right: var(--space-lg); }
+.px-2xl { padding-left: var(--space-2xl); padding-right: var(--space-2xl); }
+.py-xs { padding-top: var(--space-xs); padding-bottom: var(--space-xs); }
+.py-sm { padding-top: var(--space-sm); padding-bottom: var(--space-sm); }
+.py-md { padding-top: var(--space-md); padding-bottom: var(--space-md); }
+.py-lg { padding-top: var(--space-lg); padding-bottom: var(--space-lg); }
+
+/* gap */
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+.gap-xl { gap: var(--space-xl); }
+
+/* ===== 文字工具 ===== */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.font-title { font-family: var(--font-title); }
+.font-mono { font-family: var(--font-mono); }
+.font-body { font-family: var(--font-body); }
+.font-italic { font-family: var(--font-italic); }
+
+.text-black { color: var(--color-black); }
+.text-gold { color: var(--color-gold); }
+.text-white { color: var(--color-white); }
+.text-gray-1 { color: var(--color-gray-1); }
+.text-gray-2 { color: var(--color-gray-2); }
+.text-gray-3 { color: var(--color-gray-3); }
+
+.fw-black { font-weight: var(--fw-black); }
+.fw-bold { font-weight: var(--fw-bold); }
+.fw-regular { font-weight: var(--fw-regular); }
+
+.uppercase { text-transform: uppercase; }
+.lowercase { text-transform: lowercase; }
+
+/* 字号 */
+.fs-h1 { font-size: var(--fs-h1); }
+.fs-h2 { font-size: var(--fs-h2); }
+.fs-h3 { font-size: var(--fs-h3); }
+.fs-body { font-size: var(--fs-body); }
+.fs-caption { font-size: var(--fs-caption); }
+.fs-label { font-size: var(--fs-label); }
+.fs-num-xl { font-size: var(--fs-num-xl); }
+.fs-num-md { font-size: var(--fs-num-md); }
+
+/* 字间距 */
+.ls-title { letter-spacing: var(--ls-title); }
+.ls-label { letter-spacing: var(--ls-label); }
+.ls-label-lg { letter-spacing: var(--ls-label-lg); }
+
+/* ===== 边框工具 ===== */
+.border { border: var(--border-width-thin) var(--border-solid) var(--border-color); }
+.border-thick { border: var(--border-width-thick) var(--border-solid) var(--border-color); }
+.border-t { border-top: var(--border-width-thin) var(--border-solid) var(--border-color); }
+.border-b { border-bottom: var(--border-width-thin) var(--border-solid) var(--border-color); }
+.border-t-thick { border-top: var(--border-width-thick) var(--border-solid) var(--border-color); }
+.border-b-thick { border-bottom: var(--border-width-thick) var(--border-solid) var(--border-color); }
+
+/* ===== 背景工具 ===== */
+.bg-black { background-color: var(--color-black); }
+.bg-gold { background-color: var(--color-gold); }
+.bg-cream { background-color: var(--color-cream); }
+.bg-white { background-color: var(--color-white); }
+.bg-cream-light { background-color: var(--color-cream-light); }
+
+/* ===== 阴影工具 ===== */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+
+/* ===== 容器 ===== */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-px);
+  width: 100%;
+}
+
+/* ===== 显示与隐藏 ===== */
+.hidden { display: none !important; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+
+/* ===== 位置 ===== */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.sticky { position: sticky; }
+
+/* ===== 文字截断 ===== */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ===== 页面过渡动画 - 新野兽派风格：干脆直接 ===== */
+.br-page-enter-active,
+.br-page-leave-active {
+  transition: opacity 0.15s linear, transform 0.15s linear;
+}
+.br-page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.br-page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ===== 响应式显示工具类（S12）=====
+ * 断点：桌面 ≥1200 / 平板 768-1199 / 移动 <768
+ * 用法：.hidden-mobile 在移动端隐藏，.hidden-tablet 在平板隐藏等
+ */
+@media (max-width: 767px) {
+  .hidden-mobile { display: none !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .hidden-tablet { display: none !important; }
+}
+
+@media (min-width: 1200px) {
+  .hidden-desktop { display: none !important; }
+}
+
+/* 仅在对应断点显示 */
+.show-mobile { display: none; }
+.show-tablet { display: none; }
+@media (max-width: 767px) {
+  .show-mobile { display: revert; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .show-tablet { display: revert; }
+}
