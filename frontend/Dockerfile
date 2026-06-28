@@ -3,7 +3,7 @@
 # 构建上下文：frontend/
 
 # ===== 阶段 1：构建 =====
-FROM node:18-alpine AS builder
+FROM local/ubuntu-node:22 AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # 安装依赖（包含 devDependencies，构建需要 vue-tsc / vite）
-RUN npm ci
+RUN npm config set registry https://registry.npmmirror.com && npm ci
 
 # 复制源代码
 COPY . .

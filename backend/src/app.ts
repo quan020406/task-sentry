@@ -1,6 +1,5 @@
 import express from 'express'
 import cors from 'cors'
-import '@/types/express' // 加载 Express Request 类型增强
 import { config } from '@/config'
 import { errorHandler } from '@/middleware/error'
 import indexRoutes from '@/routes/index.routes'

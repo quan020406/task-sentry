@@ -52,3 +52,4 @@ Thumbs.db
 
 # ===== 临时部署目录 =====
 deploy/
+backups/
