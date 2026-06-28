@@ -11,18 +11,20 @@ import db from '@/database'
  * P1-4：用户 token 校验时比对 DB 中的 token_version，修改密码后旧 token 立即失效。
  * 游客 token 在此中间件已被拒绝（10202），不会进入 DB 查询分支。
  * 旧 token 缺少 tokenVersion 字段时按 0 处理，兼容历史 token。
+ *
+ * P2-10：未认证返回 HTTP 401，游客越权返回 HTTP 403（中间件直接响应，不经 errorHandler）。
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const payload = extractToken(req.headers.authorization)
 
   if (!payload) {
-    res.json(fail(10201, '未认证，请先登录'))
+    res.status(401).json(fail(10201, '未认证，请先登录'))
     return
   }
 
   // 游客不能访问需要登录的接口
   if (payload.isGuest) {
-    res.json(fail(10202, '该操作需要登录用户权限'))
+    res.status(403).json(fail(10202, '该操作需要登录用户权限'))
     return
   }
 
@@ -33,7 +35,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     .get(payload.userId) as { token_version: number } | undefined
 
   if (!row || tokenVersion !== row.token_version) {
-    res.json(fail(10201, '登录已失效，请重新登录'))
+    res.status(401).json(fail(10201, '登录已失效，请重新登录'))
     return
   }
 

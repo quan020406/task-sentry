@@ -8,6 +8,8 @@
 
 services:
   backend:
+    # 补充-5：容器异常退出时自动重启（除非手动停止）
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -24,6 +26,8 @@ services:
     ports: !reset []
 
   frontend:
+    # 补充-5：容器异常退出时自动重启（除非手动停止）
+    restart: unless-stopped
     deploy:
       resources:
         limits:

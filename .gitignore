@@ -3,7 +3,7 @@
 .env.local
 .env.*.local
 .env.docker
-.env.docker.example
+# 注意：.env.docker.example 为模板，需提交到版本库供参考
 
 # ===== 项目内部文档与规范（不上传）=====
 AGENTS.md

@@ -1,9 +1,13 @@
 import { type Request, type Response, type NextFunction } from 'express'
-import { fail, BusinessError } from '@/utils/response'
+import { fail, BusinessError, getHttpStatus } from '@/utils/response'
+import { logger } from '@/utils/logger'
 
 /**
  * 全局错误处理中间件
  * 捕获所有未处理的异常，统一返回 fail 格式
+ *
+ * P2-10：业务错误按 code 映射 HTTP status（400/401/403/404/409/429/500/503），
+ * 未映射的 code 默认 200（向后兼容）。
  */
 export function errorHandler(
   err: Error & { type?: string; status?: number },
@@ -11,9 +15,9 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ): void {
-  // 业务错误
+  // 业务错误：按 code 映射 HTTP status
   if (err instanceof BusinessError) {
-    res.json(fail(err.code, err.message))
+    res.status(getHttpStatus(err.code)).json(fail(err.code, err.message))
     return
   }
 
@@ -24,6 +28,6 @@ export function errorHandler(
   }
 
   // 未知错误
-  console.error('[Unhandled Error]', err)
+  logger.error({ module: 'error', event: 'unhandled', err: err.message, stack: err.stack }, '未处理异常')
   res.status(500).json(fail(10500, '服务器内部错误'))
 }

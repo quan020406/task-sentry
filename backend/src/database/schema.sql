@@ -54,12 +54,14 @@ CREATE TABLE IF NOT EXISTS scan_records (
 -- 用户可将扫描结果生成分享链接，供他人只读查看
 -- expire_at 为 NULL 表示永久有效
 CREATE TABLE IF NOT EXISTS shares (
-  id            VARCHAR(16)  PRIMARY KEY,      -- 短 ID，便于分享
-  scan_id       VARCHAR(32)  NOT NULL,         -- 关联扫描记录
-  user_id       INTEGER      NOT NULL,         -- 创建者（仅登录用户可创建）
-  expire_at     DATETIME,                      -- NULL 表示永久有效
-  view_count    INTEGER      DEFAULT 0,        -- 浏览次数
-  created_at    DATETIME     DEFAULT CURRENT_TIMESTAMP
+  id              VARCHAR(16)  PRIMARY KEY,    -- 短 ID，便于分享
+  scan_id         VARCHAR(32)  NOT NULL,       -- 关联扫描记录
+  user_id         INTEGER      NOT NULL,       -- 创建者（仅登录用户可创建）
+  expire_at       DATETIME,                    -- NULL 表示永久有效
+  view_count      INTEGER      DEFAULT 0,      -- 浏览次数
+  -- P2-1：分享快照，创建时保存完整扫描结果 JSON，删除原扫描后分享仍可访问
+  result_snapshot TEXT,                        -- 完整扫描结果 JSON 字符串
+  created_at      DATETIME     DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ===== 索引 =====

@@ -12,6 +12,8 @@ interface ShareRecordRow {
   expire_at: string | null
   view_count: number
   created_at: string
+  /** P2-1：分享快照（完整扫描结果 JSON 字符串），删除原扫描后仍可访问 */
+  result_snapshot: string | null
 }
 
 /** 有效期天数类型 */
@@ -82,9 +84,15 @@ export const shareService = {
     const id = generateShareId()
     const expireAt = computeExpireAt(expireDays)
 
+    // P2-1：创建分享时写入扫描结果快照，删除原扫描后分享仍可访问
+    const scanResult = scanService.getScanById(scanId)
+    // 分享是匿名只读视图，剥离原扫描者收藏状态字段
+    delete scanResult.isFavorite
+    const snapshot = JSON.stringify(scanResult)
+
     db.prepare(
-      `INSERT INTO shares (id, scan_id, user_id, expire_at) VALUES (?, ?, ?, ?)`,
-    ).run(id, scanId, userId, expireAt)
+      `INSERT INTO shares (id, scan_id, user_id, result_snapshot, expire_at) VALUES (?, ?, ?, ?, ?)`,
+    ).run(id, scanId, userId, snapshot, expireAt)
 
     const url = `${config.clientOrigin}/share/${id}`
 
@@ -123,8 +131,24 @@ export const shareService = {
     // 增加浏览次数（异步不影响主流程，但 SQLite 同步操作很快，直接执行）
     db.prepare('UPDATE shares SET view_count = view_count + 1 WHERE id = ?').run(id)
 
-    // 获取扫描结果（复用 scanService 的旧数据兼容逻辑）
-    const result = scanService.getScanById(row.scan_id)
+    // P2-1：优先读 result_snapshot，删除原扫描后分享仍可访问
+    // 回退 scan_records 兼容旧分享（result_snapshot 为空的记录）
+    let result: ScanResult
+    if (row.result_snapshot) {
+      try {
+        result = JSON.parse(row.result_snapshot) as ScanResult
+      } catch {
+        // 快照损坏，回退读 scan_records
+        result = scanService.getScanById(row.scan_id)
+      }
+    } else {
+      // 旧分享无快照，回退读原扫描记录；若已删除则视为分享内容不可用
+      try {
+        result = scanService.getScanById(row.scan_id)
+      } catch {
+        throw new BusinessError(10601, '分享内容已不可用')
+      }
+    }
 
     // S13 修复（S11 #1）：分享是匿名只读视图，剥离访问者相关字段
     // isFavorite 是原扫描者的收藏状态，对分享访问者无意义且会泄露用户行为

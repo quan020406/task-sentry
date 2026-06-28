@@ -1,5 +1,6 @@
 import db from '@/database'
 import { BusinessError } from '@/utils/response'
+import { logger } from '@/utils/logger'
 import crypto from 'node:crypto'
 import type { IdentityType } from '@/types/identity'
 import { scanTask as aiScanTask, type AIScanResult } from '@/services/ai'
@@ -195,7 +196,7 @@ export const scanService = {
       isFallback = fallbackToMock || !parseSuccess
     } catch (e) {
       // 极端情况：AI 服务和 mock 都失败，抛业务错误
-      console.error('[ScanService] AI 调用失败（含 mock 兜底）:', e)
+      logger.error({ module: 'scan', event: 'scan_failed', err: e instanceof Error ? e.message : String(e) }, 'AI 调用失败（含 mock 兜底）')
       throw new BusinessError(10501, '扫描服务暂时不可用，请稍后重试')
     }
 

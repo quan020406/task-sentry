@@ -1,10 +1,12 @@
 import { type Request, type Response } from 'express'
 import { scanService } from '@/services/scan.service'
 import { isValidIdentity } from '@/types/identity'
-import { success, fail, BusinessError } from '@/utils/response'
+import { success, BusinessError } from '@/utils/response'
 
 /**
  * 扫描控制器
+ *
+ * P2-10：错误统一抛 BusinessError，由 errorHandler 映射 HTTP status。
  */
 export const scanController = {
   /**
@@ -20,20 +22,16 @@ export const scanController = {
 
     // 参数校验
     if (!taskText || typeof taskText !== 'string') {
-      res.json(fail(10001, '请输入任务说明'))
-      return
+      throw new BusinessError(10001, '请输入任务说明')
     }
     if (taskText.trim().length < 5) {
-      res.json(fail(10002, '任务说明过短，请至少输入 5 个字符'))
-      return
+      throw new BusinessError(10002, '任务说明过短，请至少输入 5 个字符')
     }
     if (taskText.length > 2000) {
-      res.json(fail(10002, '任务说明不能超过 2000 字符'))
-      return
+      throw new BusinessError(10002, '任务说明不能超过 2000 字符')
     }
     if (!identity || !isValidIdentity(identity)) {
-      res.json(fail(10002, '请选择有效身份'))
-      return
+      throw new BusinessError(10002, '请选择有效身份')
     }
 
     // 获取用户/游客身份
@@ -42,21 +40,12 @@ export const scanController = {
 
     // 必须有其中一个身份
     if (userId === null && !guestId) {
-      res.json(fail(10201, '未获取到身份信息，请刷新页面重试'))
-      return
+      throw new BusinessError(10201, '未获取到身份信息，请刷新页面重试')
     }
 
-    try {
-      // 调用 scanService.createScan（async，内部调用 AI 服务）
-      const result = await scanService.createScan(userId, guestId, identity, taskText.trim())
-      res.json(success(result, '扫描完成'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    // 调用 scanService.createScan（async，内部调用 AI 服务）
+    const result = await scanService.createScan(userId, guestId, identity, taskText.trim())
+    res.json(success(result, '扫描完成'))
   },
 
   /**
@@ -69,19 +58,11 @@ export const scanController = {
     const userId = req.user?.userId ?? null
     const guestId = req.guestId ?? null
 
-    try {
-      // 权限校验
-      scanService.checkAccess(id, userId, guestId)
-      // 获取结果
-      const result = scanService.getScanById(id)
-      res.json(success(result))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    // 权限校验
+    scanService.checkAccess(id, userId, guestId)
+    // 获取结果
+    const result = scanService.getScanById(id)
+    res.json(success(result))
   },
 
   /**
@@ -123,8 +104,7 @@ export const scanController = {
   getFavorites(req: Request, res: Response): void {
     const userId = req.user?.userId
     if (!userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
 
     const result = scanService.getFavorites(userId, {
@@ -142,20 +122,11 @@ export const scanController = {
   toggleFavorite(req: Request, res: Response): void {
     const userId = req.user?.userId
     if (!userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
 
-    try {
-      const isFavorite = scanService.toggleFavorite(req.params.id, userId)
-      res.json(success({ isFavorite }, isFavorite ? '已收藏' : '已取消收藏'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    const isFavorite = scanService.toggleFavorite(req.params.id, userId)
+    res.json(success({ isFavorite }, isFavorite ? '已收藏' : '已取消收藏'))
   },
 
   /**
@@ -166,19 +137,10 @@ export const scanController = {
   deleteScan(req: Request, res: Response): void {
     const userId = req.user?.userId
     if (!userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
 
-    try {
-      scanService.deleteScan(req.params.id, userId)
-      res.json(success(null, '已删除'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    scanService.deleteScan(req.params.id, userId)
+    res.json(success(null, '已删除'))
   },
 }
