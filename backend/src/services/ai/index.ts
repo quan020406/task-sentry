@@ -11,6 +11,7 @@
  * 7. 记录调用日志
  */
 import { config } from '@/config'
+import { logger } from '@/utils/logger'
 import type { IdentityType } from '@/types/identity'
 import type {
   AIProviderName,
@@ -63,7 +64,7 @@ function createProvider(): BaseAIProvider {
 
   // 缺少 API Key 时降级到 mock
   if (!apiKey) {
-    console.warn('[AI] 未配置 AI_API_KEY，降级到 mock 模式')
+    logger.warn({ module: 'ai', event: 'provider_init', provider: providerName, reason: 'missing_api_key' }, '未配置 AI_API_KEY，降级到 mock 模式')
     return new MockProvider()
   }
 
@@ -94,11 +95,11 @@ function createProvider(): BaseAIProvider {
           model: model || undefined,
         })
       default:
-        console.warn(`[AI] 未知 provider: ${providerName}，降级到 mock`)
+        logger.warn({ module: 'ai', event: 'provider_init', provider: providerName, reason: 'unknown_provider' }, '未知 provider，降级到 mock')
         return new MockProvider()
     }
   } catch (e) {
-    console.error('[AI] Provider 创建失败，降级到 mock:', e)
+    logger.error({ module: 'ai', event: 'provider_init', provider: providerName, err: e instanceof Error ? e.message : String(e) }, 'Provider 创建失败，降级到 mock')
     return new MockProvider()
   }
 }
@@ -213,7 +214,7 @@ async function callWithRetry(
 
       // 指数退避：500ms, 1000ms, 2000ms...
       const delay = 500 * Math.pow(2, attempt)
-      console.warn(`[AI] 第 ${attempt + 1} 次调用失败，${delay}ms 后重试: ${lastError.message}`)
+      logger.warn({ module: 'ai', event: 'retry', attempt: attempt + 1, delayMs: delay, err: lastError.message }, 'AI 调用失败，准备重试')
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
@@ -251,7 +252,7 @@ export async function scanTask(
 
   // 1. 检查每日 token 上限
   if (isOverDailyLimit()) {
-    console.warn('[AI] 每日 token 上限已达到，降级到 mock')
+    logger.warn({ module: 'ai', event: 'fallback', reason: 'daily_token_limit', used: dailyTokenUsed, limit: DAILY_TOKEN_LIMIT }, '每日 token 上限已达到，降级到 mock')
     provider = new MockProvider()
     fallbackToMock = true
     fallbackReason = '每日 token 上限已达到'
@@ -259,7 +260,7 @@ export async function scanTask(
 
   // 2. 调用 AI provider
   if (!fallbackToMock && !provider.isConfigured()) {
-    console.warn('[AI] Provider 未配置，降级到 mock')
+    logger.warn({ module: 'ai', event: 'fallback', reason: 'provider_not_configured' }, 'Provider 未配置，降级到 mock')
     provider = new MockProvider()
     fallbackToMock = true
     fallbackReason = 'Provider 未配置'
@@ -280,7 +281,7 @@ export async function scanTask(
     }
   } catch (e) {
     errorMessage = e instanceof Error ? e.message : String(e)
-    console.error(`[AI] 调用失败，降级到 mock: ${errorMessage}`)
+    logger.error({ module: 'ai', event: 'fallback', reason: 'api_call_failed', err: errorMessage }, 'AI 调用失败，降级到 mock')
 
     // 3. 降级到 mock
     const mockProvider = new MockProvider()
@@ -321,7 +322,7 @@ export async function scanTask(
 
   // 6. 如果解析失败但调用了真实 API，再次降级到 mock 保证数据可用
   if (!parseSuccess && !fallbackToMock) {
-    console.warn('[AI] 真实 API 返回解析失败，降级到 mock 数据')
+    logger.warn({ module: 'ai', event: 'fallback', reason: 'parse_failed', parseError: parseError }, '真实 API 返回解析失败，降级到 mock 数据')
     const mockProvider = new MockProvider()
     const mockResult = await mockProvider.chat({
       messages,
