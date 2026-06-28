@@ -24,6 +24,8 @@ FROM nginx:alpine AS runner
 
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+# P1-2：复制安全响应头片段，供 nginx.conf 中各 location include
+COPY security-headers.conf /etc/nginx/conf.d/security-headers.conf
 
 # 复制构建产物到 Nginx 静态资源目录
 COPY --from=builder /app/dist /usr/share/nginx/html
