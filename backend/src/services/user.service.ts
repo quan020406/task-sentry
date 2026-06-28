@@ -48,6 +48,8 @@ export interface GuestSessionResult {
   guestId: string
   remainingCount: number
   resetAt: string
+  /** P1-1：每日免费次数上限，供前端展示 "游客 N/N" */
+  dailyLimit: number
 }
 
 /** 将数据库行转为对外用户信息 */
@@ -284,6 +286,7 @@ export const userService = {
       guestId,
       remainingCount: config.guestDailyLimit,
       resetAt: getTomorrowIso(),
+      dailyLimit: config.guestDailyLimit,
     }
   },
 
@@ -310,7 +313,13 @@ export const userService = {
         const remainingCount = Math.max(0, config.guestDailyLimit - session.scan_count)
         const token = signToken({ guestId, isGuest: true })
 
-        return { token, guestId, remainingCount, resetAt: tomorrowIso }
+        return {
+          token,
+          guestId,
+          remainingCount,
+          resetAt: tomorrowIso,
+          dailyLimit: config.guestDailyLimit,
+        }
       }
     }
 

@@ -23,6 +23,8 @@ export interface GuestSessionResult {
   guestId: string
   remainingCount: number
   resetAt: string
+  /** 每日免费次数上限，来自后端 GUEST_DAILY_LIMIT */
+  dailyLimit?: number
 }
 
 // 用户统计数据
