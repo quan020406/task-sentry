@@ -46,12 +46,22 @@ function initSchema(): void {
  * - 默认值 0，兼容历史 token（旧 token 无 tokenVersion 字段，按 0 处理）
  */
 function runMigrations(): void {
-  const columns = db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>
-  const hasTokenVersion = columns.some((col) => col.name === 'token_version')
+  // P1-4：users 表 token_version 字段
+  const userColumns = db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>
+  const hasTokenVersion = userColumns.some((col) => col.name === 'token_version')
 
   if (!hasTokenVersion) {
     db.prepare('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0').run()
     console.log('[database] migration: users 表新增 token_version 字段')
+  }
+
+  // P2-1：shares 表 result_snapshot 字段
+  const shareColumns = db.prepare('PRAGMA table_info(shares)').all() as Array<{ name: string }>
+  const hasSnapshot = shareColumns.some((col) => col.name === 'result_snapshot')
+
+  if (!hasSnapshot) {
+    db.prepare('ALTER TABLE shares ADD COLUMN result_snapshot TEXT').run()
+    console.log('[database] migration: shares 表新增 result_snapshot 字段')
   }
 }
 
