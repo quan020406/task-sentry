@@ -1,18 +1,55 @@
 import { Router, type Request, type Response } from 'express'
 import { success } from '@/utils/response'
+import db from '@/database'
+import { config } from '@/config'
 
 const router = Router()
 
 /**
  * 健康检查接口
  * GET /api/health
+ *
+ * 补充-3：返回结构化子项检查
+ * - database：DB 连通性（SELECT 1）+ 延迟
+ * - ai：仅判断是否已配置 apiKey（不发真实请求，避免拖慢响应）
+ * 整体状态：database down -> unhealthy；ai down -> degraded；其余 healthy
  */
 router.get('/health', (_req: Request, res: Response) => {
+  const checks: {
+    database: { status: string; latency?: number }
+    ai: { status: string }
+  } = {
+    database: { status: 'up' },
+    ai: { status: 'up' },
+  }
+
+  // DB 连通性检查（SELECT 1，不依赖特定表存在）
+  try {
+    const start = Date.now()
+    db.prepare('SELECT 1').get()
+    checks.database.latency = Date.now() - start
+  } catch {
+    checks.database.status = 'down'
+  }
+
+  // AI 检查：只判断是否已配置 apiKey，不发真实 API 请求
+  try {
+    checks.ai.status = config.ai.apiKey ? 'up' : 'skipped'
+  } catch {
+    checks.ai.status = 'down'
+  }
+
+  // 整体状态规则
+  let status = 'healthy'
+  if (checks.database.status === 'down') status = 'unhealthy'
+  else if (checks.ai.status === 'down') status = 'degraded'
+
   res.json(
     success({
-      status: 'healthy',
+      status,
       version: '1.0.0',
       timestamp: new Date().toISOString(),
+      checks,
     }),
   )
 })
