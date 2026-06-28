@@ -8,6 +8,8 @@ declare module 'express' {
     user?: {
       userId: number
       isGuest: boolean
+      /** P1-4：token 版本号，由 authMiddleware 校验后挂载，供下游业务使用 */
+      tokenVersion?: number
     }
     /** 游客 ID（optionalAuth 中间件挂载） */
     guestId?: string

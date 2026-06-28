@@ -35,6 +35,27 @@ function initSchema(): void {
   console.log('[database] 表结构初始化完成')
 }
 
+/**
+ * P1-4：幂等 migration —— 为已存在的 users 表补充 token_version 字段
+ *
+ * 背景：线上已有数据库不会因 schema.sql 的 CREATE TABLE IF NOT EXISTS 而新增字段，
+ * 必须用 ALTER TABLE 显式补列。此处用 PRAGMA table_info 检查列是否存在，保证幂等。
+ *
+ * 规则：
+ * - 不删除/重建 users 表，不影响已有用户数据
+ * - 默认值 0，兼容历史 token（旧 token 无 tokenVersion 字段，按 0 处理）
+ */
+function runMigrations(): void {
+  const columns = db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>
+  const hasTokenVersion = columns.some((col) => col.name === 'token_version')
+
+  if (!hasTokenVersion) {
+    db.prepare('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0').run()
+    console.log('[database] migration: users 表新增 token_version 字段')
+  }
+}
+
 initSchema()
+runMigrations()
 
 export default db

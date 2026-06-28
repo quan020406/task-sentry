@@ -9,6 +9,8 @@ export interface JwtUserPayload {
   guestId?: string
   /** 是否为游客 */
   isGuest: boolean
+  /** P1-4：token 版本号，仅用户 token 携带；修改密码后 +1 使旧 token 失效。游客不需要 */
+  tokenVersion?: number
 }
 
 /**

@@ -14,6 +14,7 @@ interface UserRow {
   password_hash: string
   avatar: string | null
   scan_count: number
+  token_version: number
   created_at: string
   updated_at: string
 }
@@ -137,7 +138,12 @@ export const userService = {
       .prepare('SELECT * FROM users WHERE id = ?')
       .get(result.lastInsertRowid) as UserRow
 
-    const token = signToken({ userId: userRow.id, isGuest: false })
+    // P1-4：签发 token 时写入当前 token_version，修改密码后旧 token 失效
+    const token = signToken({
+      userId: userRow.id,
+      isGuest: false,
+      tokenVersion: userRow.token_version,
+    })
     return { token, user: toUserProfile(userRow) }
   },
 
@@ -160,7 +166,12 @@ export const userService = {
       throw new BusinessError(10103, '用户名或密码错误')
     }
 
-    const token = signToken({ userId: userRow.id, isGuest: false })
+    // P1-4：签发 token 时写入当前 token_version，修改密码后旧 token 失效
+    const token = signToken({
+      userId: userRow.id,
+      isGuest: false,
+      tokenVersion: userRow.token_version,
+    })
     return { token, user: toUserProfile(userRow) }
   },
 
@@ -227,8 +238,10 @@ export const userService = {
     }
 
     const newHash = await hashPassword(newPassword)
-    db.prepare('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-      .run(newHash, userId)
+    // P1-4：修改密码同时递增 token_version，使修改前签发的旧 token 立即失效
+    db.prepare(
+      'UPDATE users SET password_hash = ?, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    ).run(newHash, userId)
   },
 
   /**
