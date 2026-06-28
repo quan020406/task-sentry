@@ -1,10 +1,12 @@
 import { type Request, type Response } from 'express'
 import { userService } from '@/services/user.service'
-import { success, fail, BusinessError } from '@/utils/response'
+import { success, BusinessError } from '@/utils/response'
 
 /**
  * 用户控制器
  * 需登录的接口（auth 中间件已挂载 req.user）
+ *
+ * P2-10：错误统一抛 BusinessError，由 errorHandler 映射 HTTP status。
  */
 export const userController = {
   /**
@@ -13,8 +15,7 @@ export const userController = {
    */
   profile(req: Request, res: Response): void {
     if (!req.user?.userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
     const user = userService.getProfile(req.user.userId)
     res.json(success(user))
@@ -27,8 +28,7 @@ export const userController = {
    */
   async updateProfile(req: Request, res: Response): Promise<void> {
     if (!req.user?.userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
 
     const { username, avatar } = req.body
@@ -36,25 +36,15 @@ export const userController = {
     // 用户名校验
     if (username !== undefined) {
       if (typeof username !== 'string' || username.length < 3 || username.length > 20) {
-        res.json(fail(10002, '用户名长度需为 3-20 字符'))
-        return
+        throw new BusinessError(10002, '用户名长度需为 3-20 字符')
       }
       if (!/^[A-Za-z0-9_]+$/.test(username)) {
-        res.json(fail(10002, '用户名只能包含字母、数字和下划线'))
-        return
+        throw new BusinessError(10002, '用户名只能包含字母、数字和下划线')
       }
     }
 
-    try {
-      const user = userService.updateProfile(req.user.userId, { username, avatar })
-      res.json(success(user, '更新成功'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    const user = userService.updateProfile(req.user.userId, { username, avatar })
+    res.json(success(user, '更新成功'))
   },
 
   /**
@@ -64,31 +54,20 @@ export const userController = {
    */
   async changePassword(req: Request, res: Response): Promise<void> {
     if (!req.user?.userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
 
     const { oldPassword, newPassword } = req.body
 
     if (!oldPassword || !newPassword) {
-      res.json(fail(10001, '请输入旧密码和新密码'))
-      return
+      throw new BusinessError(10001, '请输入旧密码和新密码')
     }
     if (newPassword.length < 6 || newPassword.length > 32) {
-      res.json(fail(10002, '新密码长度需为 6-32 字符'))
-      return
+      throw new BusinessError(10002, '新密码长度需为 6-32 字符')
     }
 
-    try {
-      await userService.changePassword(req.user.userId, oldPassword, newPassword)
-      res.json(success(null, '密码修改成功'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    await userService.changePassword(req.user.userId, oldPassword, newPassword)
+    res.json(success(null, '密码修改成功'))
   },
 
   /**
@@ -97,8 +76,7 @@ export const userController = {
    */
   stats(req: Request, res: Response): void {
     if (!req.user?.userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
     const stats = userService.getStats(req.user.userId)
     res.json(success(stats))

@@ -1,9 +1,11 @@
 import { type Request, type Response } from 'express'
 import { shareService, type ExpireDays } from '@/services/share.service'
-import { success, fail, BusinessError } from '@/utils/response'
+import { success, BusinessError } from '@/utils/response'
 
 /**
  * 分享控制器
+ *
+ * P2-10：错误统一抛 BusinessError，由 errorHandler 映射 HTTP status。
  */
 export const shareController = {
   /**
@@ -16,15 +18,13 @@ export const shareController = {
   createShare(req: Request, res: Response): void {
     const userId = req.user?.userId
     if (!userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
 
     const { scanId, expireDays } = req.body || {}
 
     if (!scanId || typeof scanId !== 'string') {
-      res.json(fail(10001, '请提供 scanId'))
-      return
+      throw new BusinessError(10001, '请提供 scanId')
     }
 
     const validExpireDays: ExpireDays[] = [7, 30, 0]
@@ -32,20 +32,11 @@ export const shareController = {
       typeof expireDays !== 'number' ||
       !validExpireDays.includes(expireDays as ExpireDays)
     ) {
-      res.json(fail(10002, 'expireDays 仅支持 7 / 30 / 0'))
-      return
+      throw new BusinessError(10002, 'expireDays 仅支持 7 / 30 / 0')
     }
 
-    try {
-      const result = shareService.createShare(userId, scanId, expireDays as ExpireDays)
-      res.json(success(result, '分享链接已生成'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    const result = shareService.createShare(userId, scanId, expireDays as ExpireDays)
+    res.json(success(result, '分享链接已生成'))
   },
 
   /**
@@ -58,19 +49,10 @@ export const shareController = {
     const { id } = req.params
 
     if (!id) {
-      res.json(fail(10001, '请提供分享 ID'))
-      return
+      throw new BusinessError(10001, '请提供分享 ID')
     }
 
-    try {
-      const content = shareService.getShare(id)
-      res.json(success(content))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    const content = shareService.getShare(id)
+    res.json(success(content))
   },
 }

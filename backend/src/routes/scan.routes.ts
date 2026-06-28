@@ -2,7 +2,6 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { scanController } from '@/controllers/scan.controller'
 import { optionalAuthMiddleware, authMiddleware } from '@/middleware/auth'
 import { userService } from '@/services/user.service'
-import { fail, BusinessError } from '@/utils/response'
 
 const router = Router()
 
@@ -11,6 +10,8 @@ const router = Router()
  * POST /api/scans
  * 需 optionalAuth 中间件（游客和登录用户均可）
  * 中间件链：optionalAuth → 次数扣减 → 创建扫描
+ *
+ * P2-10：游客次数用尽抛 BusinessError(10303)，由 errorHandler 映射为 HTTP 429。
  */
 router.post(
   '/',
@@ -29,10 +30,6 @@ router.post(
 
       next()
     } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
       next(e)
     }
   },

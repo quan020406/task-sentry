@@ -1,9 +1,11 @@
 import { type Request, type Response } from 'express'
 import { userService } from '@/services/user.service'
-import { success, fail, BusinessError } from '@/utils/response'
+import { success, BusinessError } from '@/utils/response'
 
 /**
  * 认证控制器
+ *
+ * P2-10：错误统一抛 BusinessError，由 errorHandler 映射 HTTP status。
  */
 export const authController = {
   /**
@@ -16,37 +18,23 @@ export const authController = {
 
     // 参数校验
     if (!username || !email || !password) {
-      res.json(fail(10001, '请填写用户名、邮箱和密码'))
-      return
+      throw new BusinessError(10001, '请填写用户名、邮箱和密码')
     }
     if (typeof username !== 'string' || username.length < 3 || username.length > 20) {
-      res.json(fail(10002, '用户名长度需为 3-20 字符'))
-      return
+      throw new BusinessError(10002, '用户名长度需为 3-20 字符')
     }
     if (!/^[A-Za-z0-9_]+$/.test(username)) {
-      res.json(fail(10002, '用户名只能包含字母、数字和下划线'))
-      return
+      throw new BusinessError(10002, '用户名只能包含字母、数字和下划线')
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      res.json(fail(10002, '邮箱格式不正确'))
-      return
+      throw new BusinessError(10002, '邮箱格式不正确')
     }
     if (password.length < 6 || password.length > 32) {
-      res.json(fail(10002, '密码长度需为 6-32 字符'))
-      return
+      throw new BusinessError(10002, '密码长度需为 6-32 字符')
     }
 
-    try {
-      const result = await userService.register(username, email, password)
-      res.json(success(result, '注册成功'))
-    } catch (e) {
-      // 业务错误
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    const result = await userService.register(username, email, password)
+    res.json(success(result, '注册成功'))
   },
 
   /**
@@ -58,20 +46,11 @@ export const authController = {
     const { account, password } = req.body
 
     if (!account || !password) {
-      res.json(fail(10001, '请输入账号和密码'))
-      return
+      throw new BusinessError(10001, '请输入账号和密码')
     }
 
-    try {
-      const result = await userService.login(account, password)
-      res.json(success(result, '登录成功'))
-    } catch (e) {
-      if (e instanceof BusinessError) {
-        res.json(fail(e.code, e.message))
-        return
-      }
-      throw e
-    }
+    const result = await userService.login(account, password)
+    res.json(success(result, '登录成功'))
   },
 
   /**
@@ -92,8 +71,7 @@ export const authController = {
    */
   me(req: Request, res: Response): void {
     if (!req.user?.userId) {
-      res.json(fail(10201, '未认证'))
-      return
+      throw new BusinessError(10201, '未认证')
     }
     const user = userService.getProfile(req.user.userId)
     res.json(success(user))
