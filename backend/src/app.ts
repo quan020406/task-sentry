@@ -11,6 +11,9 @@ import db from '@/database'
 
 const app = express()
 
+// 隐藏 Express 框架标识，避免暴露技术栈信息
+app.disable('x-powered-by')
+
 // ===== 中间件 =====
 app.use(
   cors({
