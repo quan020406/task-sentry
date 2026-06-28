@@ -160,22 +160,35 @@ export function getDailyTokenUsage(): { date: string; used: number; limit: numbe
 
 /**
  * 记录调用日志
+ *
+ * 补充-2：AI 调用日志改为结构化指标，便于统计聚合。
+ * 字段：module/event/provider/model/success/durationMs/totalTokens/fallbackToMock
+ * 失败时附加 errorMessage；fallback 时附加 reason（由调用方写入 errorMessage 字段）。
  */
 function logCall(log: AICallLog): void {
   callLogs.push(log)
-  // 保持日志大小
+  // 保持日志大小（最多 100 条，避免内存泄漏）
   if (callLogs.length > MAX_LOG_SIZE) {
     callLogs.shift()
   }
-  // 同时输出到控制台（不记录敏感内容）
-  const status = log.success ? '✓' : '✗'
-  const fallback = log.fallbackToMock ? '[MOCK]' : ''
-  console.log(
-    `[AI] ${status} ${log.provider}/${log.model} ${log.durationMs}ms ${log.totalTokens ?? 0}tokens ${fallback}`,
+
+  // 结构化日志输出（不记录敏感内容）
+  logger.info(
+    {
+      module: 'ai',
+      event: 'ai_call',
+      provider: log.provider,
+      model: log.model,
+      success: log.success,
+      durationMs: log.durationMs,
+      totalTokens: log.totalTokens ?? 0,
+      fallbackToMock: log.fallbackToMock,
+      taskTextLength: log.taskTextLength,
+      identity: log.identity,
+      ...(log.errorMessage ? { errorMessage: log.errorMessage } : {}),
+    },
+    log.success ? 'AI call completed' : 'AI call failed',
   )
-  if (!log.success && log.errorMessage) {
-    console.warn(`[AI] 失败原因: ${log.errorMessage}`)
-  }
 }
 
 /** 获取最近的调用日志 */
