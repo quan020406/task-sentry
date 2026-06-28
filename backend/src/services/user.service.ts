@@ -67,15 +67,39 @@ function generateGuestId(): string {
   return 'guest_' + crypto.randomBytes(12).toString('hex')
 }
 
-/** 获取今日 0 点 + 明日 0 点（用于次数重置判断） */
-function getTodayRange(): { todayStr: string; tomorrowStr: string } {
+/**
+ * P0-2 修复：统一的本地日期工具
+ *
+ * 旧实现的根因 bug：
+ *   getTodayRange() 返回 today.toISOString() → "2026-06-28T00:00:00.000Z"（T 分隔）
+ *   而 last_scan_at 用 SQLite CURRENT_TIMESTAMP → "2026-06-28 02:00:00"（空格分隔）
+ *   字符串比较时第 11 位 ' '(0x20) < 'T'(0x54)，导致 last_scan_at < todayStr 永真，
+ *   needReset 永远成立，scan_count 永远被重置为 0，游客永远到不了次数上限。
+ *
+ * 修复策略：统一用本地时区 YYYY-MM-DD 日期字符串比较 + 存储，彻底消除格式不一致。
+ */
+
+/** 获取本地时区今日日期字符串 YYYY-MM-DD（en-CA locale 保证格式） */
+function getTodayDateStr(): string {
+  // toLocaleDateString('en-CA') 在所有 Node 版本下稳定返回 'YYYY-MM-DD'
+  return new Date().toLocaleDateString('en-CA')
+}
+
+/** 计算次日 0 点的 ISO 字符串（用于 resetAt 返回给前端展示） */
+function getTomorrowIso(): string {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-  return {
-    todayStr: today.toISOString(),
-    tomorrowStr: tomorrow.toISOString(),
-  }
+  return tomorrow.toISOString()
+}
+
+/**
+ * 从 guest_sessions.last_scan_at 提取日期部分 YYYY-MM-DD
+ * 兼容旧数据 "YYYY-MM-DD HH:MM:SS"（SQLite CURRENT_TIMESTAMP）与新数据 "YYYY-MM-DD"
+ */
+function getLastScanDate(lastScanAt: string | null): string {
+  if (!lastScanAt) return ''
+  return lastScanAt.slice(0, 10)
 }
 
 export const userService = {
@@ -254,13 +278,12 @@ export const userService = {
     db.prepare('INSERT INTO guest_sessions (id, scan_count) VALUES (?, 0)').run(guestId)
 
     const token = signToken({ guestId, isGuest: true })
-    const { tomorrowStr } = getTodayRange()
 
     return {
       token,
       guestId,
       remainingCount: config.guestDailyLimit,
-      resetAt: tomorrowStr,
+      resetAt: getTomorrowIso(),
     }
   },
 
@@ -270,14 +293,15 @@ export const userService = {
    * 如果上次扫描是昨天及之前，重置次数
    */
   getOrCreateGuestSession(guestId?: string): GuestSessionResult {
-    const { todayStr, tomorrowStr } = getTodayRange()
+    const todayStr = getTodayDateStr()
+    const tomorrowIso = getTomorrowIso()
 
     if (guestId) {
       const session = db.prepare('SELECT * FROM guest_sessions WHERE id = ?').get(guestId) as GuestSessionRow | undefined
 
       if (session) {
-        // 判断是否需要重置次数（上次扫描在今天之前）
-        const needReset = !session.last_scan_at || session.last_scan_at < todayStr
+        // P0-2 修复：用统一的 YYYY-MM-DD 日期比较，替代旧的 ISO 字符串比较（旧逻辑永真导致永远重置）
+        const needReset = getLastScanDate(session.last_scan_at) !== todayStr
         if (needReset) {
           db.prepare('UPDATE guest_sessions SET scan_count = 0 WHERE id = ?').run(guestId)
           session.scan_count = 0
@@ -286,7 +310,7 @@ export const userService = {
         const remainingCount = Math.max(0, config.guestDailyLimit - session.scan_count)
         const token = signToken({ guestId, isGuest: true })
 
-        return { token, guestId, remainingCount, resetAt: tomorrowStr }
+        return { token, guestId, remainingCount, resetAt: tomorrowIso }
       }
     }
 
@@ -295,45 +319,66 @@ export const userService = {
   },
 
   /**
-   * 增加游客扫描次数
+   * 增加游客扫描次数（P0-2 修复：事务保证 check + increment 原子性，杜绝并发超扣）
+   *
+   * 流程（事务内）：
+   *   1. 读取 session
+   *   2. 跨天则重置
+   *   3. 检查是否超限 → 超限抛 10303（不调用 AI）
+   *   4. scan_count + 1，last_scan_at 写今日日期
+   *
    * @returns 剩余次数
    * @throws 10303 游客次数已用尽
    */
   incrementGuestScanCount(guestId: string): number {
-    const { todayStr, tomorrowStr } = getTodayRange()
-    const session = db.prepare('SELECT * FROM guest_sessions WHERE id = ?').get(guestId) as GuestSessionRow | undefined
+    const todayStr = getTodayDateStr()
 
-    if (!session) {
-      // 不存在则创建新会话
-      const result = this.createGuestSession()
-      return result.remainingCount
-    }
+    const incrementTxn = db.transaction(() => {
+      const session = db.prepare('SELECT * FROM guest_sessions WHERE id = ?').get(guestId) as
+        | GuestSessionRow
+        | undefined
 
-    // 判断是否需要重置
-    const needReset = !session.last_scan_at || session.last_scan_at < todayStr
-    const currentCount = needReset ? 0 : session.scan_count
+      // 不存在则创建新会话并直接扣 1 次
+      if (!session) {
+        db.prepare(
+          'INSERT INTO guest_sessions (id, scan_count, last_scan_at) VALUES (?, 1, ?)',
+        ).run(guestId, todayStr)
+        return Math.max(0, config.guestDailyLimit - 1)
+      }
 
-    if (currentCount >= config.guestDailyLimit) {
-      throw new BusinessError(10303, '今日免费扫描次数已用尽，登录后可继续使用')
-    }
+      // 跨天重置判断（统一 YYYY-MM-DD 比较）
+      const needReset = getLastScanDate(session.last_scan_at) !== todayStr
+      const currentCount = needReset ? 0 : session.scan_count
 
-    const newCount = currentCount + 1
-    db.prepare('UPDATE guest_sessions SET scan_count = ?, last_scan_at = CURRENT_TIMESTAMP WHERE id = ?')
-      .run(newCount, guestId)
+      // 前置校验：超限直接抛错，不进入扫描流程
+      if (currentCount >= config.guestDailyLimit) {
+        throw new BusinessError(10303, '今日免费扫描次数已用尽，登录后可继续使用')
+      }
 
-    return Math.max(0, config.guestDailyLimit - newCount)
+      const newCount = currentCount + 1
+      // last_scan_at 改存 YYYY-MM-DD（与比较格式一致），不再用 CURRENT_TIMESTAMP
+      db.prepare('UPDATE guest_sessions SET scan_count = ?, last_scan_at = ? WHERE id = ?').run(
+        newCount,
+        todayStr,
+        guestId,
+      )
+
+      return Math.max(0, config.guestDailyLimit - newCount)
+    })
+
+    return incrementTxn()
   },
 
   /** 获取游客剩余次数（不增加） */
   getGuestRemainingCount(guestId: string): number {
-    const { todayStr } = getTodayRange()
+    const todayStr = getTodayDateStr()
     const session = db.prepare('SELECT * FROM guest_sessions WHERE id = ?').get(guestId) as GuestSessionRow | undefined
 
     if (!session) {
       return config.guestDailyLimit
     }
 
-    const needReset = !session.last_scan_at || session.last_scan_at < todayStr
+    const needReset = getLastScanDate(session.last_scan_at) !== todayStr
     const currentCount = needReset ? 0 : session.scan_count
     return Math.max(0, config.guestDailyLimit - currentCount)
   },

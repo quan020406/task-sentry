@@ -200,6 +200,10 @@ async function callWithRetry(
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const result = await provider.chat(params)
+      // P0-3 修复：空响应视为失败，触发重试（避免后续 parser 直接走兜底）
+      if (!result.content || result.content.trim().length === 0) {
+        throw new Error('AI 返回空响应')
+      }
       return result
     } catch (e) {
       lastError = e instanceof Error ? e : new Error(String(e))
@@ -235,7 +239,7 @@ async function callWithRetry(
 export async function scanTask(
   taskText: string,
   identity: IdentityType,
-): Promise<{ result: AIScanResult; fallbackToMock: boolean }> {
+): Promise<{ result: AIScanResult; fallbackToMock: boolean; parseSuccess: boolean }> {
   const startTime = Date.now()
   const messages = buildScanMessages(taskText, identity)
 
@@ -325,10 +329,10 @@ export async function scanTask(
       maxTokens: config.ai.maxTokens,
     })
     const mockParsed = parseScanResult(mockResult.content, taskText)
-    return { result: mockParsed.result, fallbackToMock: true }
+    return { result: mockParsed.result, fallbackToMock: true, parseSuccess: mockParsed.success }
   }
 
-  return { result, fallbackToMock }
+  return { result, fallbackToMock, parseSuccess }
 }
 
 /**

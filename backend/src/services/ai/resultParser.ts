@@ -54,6 +54,18 @@ function extractJsonString(raw: string): string {
   return trimmed
 }
 
+/**
+ * P0-3 修复：去除 JSON 字符串中的尾逗号
+ *
+ * DeepSeek 等模型常输出 `{"a":1,}` 或 `[1,2,]` 这类尾逗号，
+ * JSON.parse 不支持，会报 "Unexpected token } in JSON"。
+ * 这里用正则把 `,}` / `,]`（中间可有空白/换行）替换为 `}` / `]`。
+ */
+function removeTrailingCommas(jsonStr: string): string {
+  // 匹配逗号 + 任意空白 + } 或 ]
+  return jsonStr.replace(/,\s*([}\]])/g, '$1')
+}
+
 /** 安全的字符串提取 */
 function asString(value: unknown, fallback = ''): string {
   if (typeof value === 'string') return value
@@ -247,7 +259,8 @@ export function parseScanResult(raw: string, taskText: string): {
     return { result: buildFallbackResult(taskText), success: false, error: '空响应' }
   }
 
-  const jsonStr = extractJsonString(raw)
+  // P0-3 修复：提取后清理尾逗号，再交给 JSON.parse
+  const jsonStr = removeTrailingCommas(extractJsonString(raw))
 
   let parsed: unknown
   try {

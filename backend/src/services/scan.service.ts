@@ -84,6 +84,8 @@ export interface ScanResult {
   isFavorite?: boolean
   /** 扫描身份（S10：getScanById 返回时附加，供结果页 URL 直接访问时回退） */
   identity?: IdentityType
+  /** P0-3：是否为兜底数据（fallbackToMock 或解析失败时为 true），仅首次扫描响应携带，不入库 */
+  _fallback?: boolean
 }
 
 /** 对外暴露的扫描记录（不含完整结果 JSON） */
@@ -185,9 +187,12 @@ export const scanService = {
 
     // 调用 AI 服务（内部已处理重试、超时、降级）
     let aiResult: AIScanResult
+    let isFallback = false
     try {
-      const { result } = await aiScanTask(taskText, identity)
+      const { result, fallbackToMock, parseSuccess } = await aiScanTask(taskText, identity)
       aiResult = result
+      // P0-3：标记是否为兜底数据（API 降级或解析失败）
+      isFallback = fallbackToMock || !parseSuccess
     } catch (e) {
       // 极端情况：AI 服务和 mock 都失败，抛业务错误
       console.error('[ScanService] AI 调用失败（含 mock 兜底）:', e)
@@ -204,7 +209,7 @@ export const scanService = {
       createdAt,
     }
 
-    // 入库
+    // 入库（不含 _fallback 标记，避免污染历史记录）
     db.prepare(
       `INSERT INTO scan_records (id, user_id, guest_id, identity, task_text, score, risk_level, result_json)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -219,7 +224,8 @@ export const scanService = {
       JSON.stringify(fullResult),
     )
 
-    return fullResult
+    // P0-3：首次扫描响应携带 _fallback 标记，供前端识别兜底数据并提示用户
+    return { ...fullResult, _fallback: isFallback }
   },
 
   /**
