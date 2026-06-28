@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   avatar        VARCHAR(255),
   scan_count    INTEGER      DEFAULT 0,
+  -- P1-4：token 版本号，修改密码时 +1，使旧 token 失效；默认 0 兼容历史 token
+  token_version INTEGER      NOT NULL DEFAULT 0,
   created_at    DATETIME     DEFAULT CURRENT_TIMESTAMP,
   updated_at    DATETIME     DEFAULT CURRENT_TIMESTAMP
 );
