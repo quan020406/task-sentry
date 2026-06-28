@@ -14,6 +14,10 @@ export const useUserStore = defineStore('user', () => {
   const isGuest = ref<boolean>(localStorage.getItem('isGuest') === 'true')
   const guestId = ref<string>(localStorage.getItem('guestId') || '')
   const guestRemaining = ref<number>(parseInt(localStorage.getItem('guestRemaining') || '3', 10))
+  // P1-1：游客每日上限来自后端 GUEST_DAILY_LIMIT，不再写死 /3
+  const guestDailyLimit = ref<number>(
+    parseInt(localStorage.getItem('guestDailyLimit') || '3', 10),
+  )
   const stats = ref<UserStats | null>(null)
 
   // ===== getters =====
@@ -22,7 +26,7 @@ export const useUserStore = defineStore('user', () => {
   const username = computed(() => userInfo.value?.username || (isGuest.value ? '游客' : ''))
   const displayLabel = computed(() => {
     if (isLoggedIn.value) return userInfo.value?.username || '用户'
-    if (isGuest.value) return `游客 ${guestRemaining.value}/3`
+    if (isGuest.value) return `游客 ${guestRemaining.value}/${guestDailyLimit.value}`
     return '未登录'
   })
 
@@ -48,6 +52,7 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('isGuest')
     localStorage.removeItem('guestId')
     localStorage.removeItem('guestRemaining')
+    localStorage.removeItem('guestDailyLimit')
   }
 
   /** 设置游客身份 */
@@ -56,6 +61,7 @@ export const useUserStore = defineStore('user', () => {
     guestId: string
     remainingCount: number
     resetAt: string
+    dailyLimit?: number
   }): void {
     token.value = data.token
     localStorage.setItem('token', data.token)
@@ -65,6 +71,11 @@ export const useUserStore = defineStore('user', () => {
     localStorage.setItem('isGuest', 'true')
     localStorage.setItem('guestId', data.guestId)
     localStorage.setItem('guestRemaining', String(data.remainingCount))
+    // P1-1：保存后端返回的每日上限
+    if (data.dailyLimit != null) {
+      guestDailyLimit.value = data.dailyLimit
+      localStorage.setItem('guestDailyLimit', String(data.dailyLimit))
+    }
   }
 
   /** 更新游客剩余次数 */
@@ -83,6 +94,7 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('isGuest')
     localStorage.removeItem('guestId')
     localStorage.removeItem('guestRemaining')
+    localStorage.removeItem('guestDailyLimit')
   }
 
   /** 获取用户信息 */
@@ -121,6 +133,7 @@ export const useUserStore = defineStore('user', () => {
     isGuest,
     guestId,
     guestRemaining,
+    guestDailyLimit,
     stats,
     // getters
     isLoggedIn,
